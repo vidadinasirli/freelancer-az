@@ -30,6 +30,7 @@ export default function Kabinet() {
   const [specialties, setSpecialties] = useState([]);
   const [dashboardData, setDashboardData] = useState({ replies: [], active: [], completed: [], arbitration: [] });
   const [specialtyForm, setSpecialtyForm] = useState({ category: '', title: '', about: '', hourlyRate: '', experience: '1-3 il' });
+  const [specialtyError, setSpecialtyError] = useState('');
   const [mediaUploading, setMediaUploading] = useState('');
 
   useEffect(() => {
@@ -72,6 +73,20 @@ export default function Kabinet() {
     await api.saveSocialLinks(socialLinks);
     setSaveMessage('Sosial linklər yadda saxlanıldı.');
     setTimeout(() => setSaveMessage(''), 3000);
+  };
+
+  const addSpecialty = async () => {
+    setSpecialtyError('');
+    try {
+      const item = await api.addSpecialty({
+        ...specialtyForm,
+        hourlyRate: Number(specialtyForm.hourlyRate) || 0,
+      });
+      setSpecialties((current) => [item, ...current]);
+      setSpecialtyForm({ category: '', title: '', about: '', hourlyRate: '', experience: '1-3 il' });
+    } catch (err) {
+      setSpecialtyError(err.message || 'İxtisas sahəsi əlavə edilə bilmədi.');
+    }
   };
 
   const uploadProfileMedia = async (field, file) => {
@@ -307,7 +322,8 @@ export default function Kabinet() {
                       <select value={specialtyForm.experience} onChange={(e) => setSpecialtyForm({ ...specialtyForm, experience: e.target.value })} className="px-3 py-2 border border-slate-200 rounded-lg bg-white"><option>bir ildən az</option><option>1-3 il</option><option>3-5 il</option><option>5+ il</option></select>
                     </div>
                     <textarea value={specialtyForm.about} onChange={(e) => setSpecialtyForm({ ...specialtyForm, about: e.target.value })} placeholder="Bu sahə haqqında qısa açıqlama" className="w-full mt-3 px-3 py-2 border border-slate-200 rounded-lg min-h-20" />
-                    <button type="button" onClick={async () => { const item = await api.addSpecialty(specialtyForm); setSpecialties([item, ...specialties]); setSpecialtyForm({ category: '', title: '', about: '', hourlyRate: '', experience: '1-3 il' }); }} className="mt-3 px-4 py-2 bg-slate-900 text-white rounded-lg font-bold">Sahə əlavə et</button>
+                    {specialtyError && <p className="mt-3 text-sm text-red-600">{specialtyError}</p>}
+                    <button type="button" onClick={addSpecialty} className="mt-3 px-4 py-2 bg-slate-900 text-white rounded-lg font-bold">Sahə əlavə et</button>
                     <div className="mt-4 space-y-2">{specialties.map((item) => <div key={item.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"><div><b>{item.title}</b><p className="text-xs text-slate-500">{item.category} · {item.hourlyRate} AZN</p></div><button type="button" onClick={async () => { await api.deleteSpecialty(item.id); setSpecialties(specialties.filter((entry) => entry.id !== item.id)); }} className="text-red-500 text-xs font-bold">Sil</button></div>)}</div>
                   </div>
 
