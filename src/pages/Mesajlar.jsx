@@ -69,6 +69,15 @@ export default function Mesajlar() {
     if (activeUserId) loadThread(activeUserId);
   }, [activeUserId, loadThread]);
 
+  useEffect(() => {
+    if (!activeUserId) return undefined;
+    const interval = window.setInterval(() => {
+      loadThread(activeUserId);
+      loadConversations();
+    }, 10000);
+    return () => window.clearInterval(interval);
+  }, [activeUserId, loadThread, loadConversations]);
+
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   useEffect(() => { scrollToBottom(); }, [messages]);
 

@@ -10,6 +10,10 @@ export default function Bildirimler() {
   useEffect(() => {
     if (!user) return;
     api.getNotifications().then(setItems).then(() => api.markNotificationsRead()).catch((err) => setError(err.message));
+    const interval = window.setInterval(() => {
+      api.getNotifications().then(setItems).catch((err) => setError(err.message));
+    }, 30000);
+    return () => window.clearInterval(interval);
   }, [user]);
   if (!user) return <div className="min-h-screen pt-32 text-center text-slate-500">Bildirişləri görmək üçün daxil olun.</div>;
   return (

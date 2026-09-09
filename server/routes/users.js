@@ -9,6 +9,7 @@ function enrichProfile(row) {
   profile.socialLinks = db.prepare('SELECT github, instagram, linkedin, facebook, displayLink1, displayLink2 FROM social_links WHERE userId = ?').get(row.id) || {};
   profile.specialties = db.prepare('SELECT id, category, title, about, hourlyRate, experience FROM freelancer_specialties WHERE freelancerId = ? ORDER BY createdAt DESC').all(row.id);
   profile.followers = db.prepare('SELECT COUNT(*) count FROM follows WHERE followingId = ?').get(row.id).count;
+  profile.onlineStatus = db.prepare('SELECT isOnline, lastSeenAt FROM user_online_status WHERE userId = ?').get(row.id) || { isOnline: 0, lastSeenAt: '' };
   profile.projects = db.prepare('SELECT id, title, category, imageUrl AS image, description, likes, views, createdAt FROM projects WHERE ownerId = ? ORDER BY createdAt DESC').all(row.id);
   profile.stats = {
     completedOrders: db.prepare("SELECT COUNT(*) count FROM tasks t JOIN applications a ON a.taskId = t.id WHERE a.freelancerId = ? AND t.status = 'tamamlandı'").get(row.id).count,

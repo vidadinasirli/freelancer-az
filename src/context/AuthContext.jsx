@@ -48,9 +48,12 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (!user) return undefined;
     api.updateOnlineStatus(true).catch(() => {});
+    const heartbeat = window.setInterval(() => {
+      api.updateOnlineStatus(true).catch(() => {});
+    }, 30000);
     const onUnload = () => { api.updateOnlineStatus(false).catch(() => {}); };
     window.addEventListener('beforeunload', onUnload);
-    return () => { onUnload(); window.removeEventListener('beforeunload', onUnload); };
+    return () => { window.clearInterval(heartbeat); onUnload(); window.removeEventListener('beforeunload', onUnload); };
   }, [user]);
 
   const applySession = ({ token, user: u, profile }) => {

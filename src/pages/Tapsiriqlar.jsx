@@ -952,7 +952,7 @@ export default function Tapsiriqlar() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/30 to-transparent"></div>
                     <div className="absolute top-4 right-4 bg-black/40 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-lg">
-                      {selectedFreelancer.stats.lastActive}
+                      {selectedFreelancer.onlineStatus?.isOnline ? 'Onlayn' : 'Offline'}
                     </div>
                   </div>
 
@@ -1113,7 +1113,7 @@ export default function Tapsiriqlar() {
                         </div>
                         <div className="flex justify-between items-center p-3 bg-white rounded-xl shadow-sm border border-slate-50">
                           <span className="text-slate-500 font-semibold">Status</span>
-                          <span className="font-bold text-slate-800">{selectedFreelancer.status || 'Aktiv'}</span>
+                          <span className={`font-bold ${selectedFreelancer.onlineStatus?.isOnline ? 'text-emerald-600' : 'text-slate-800'}`}>{selectedFreelancer.onlineStatus?.isOnline ? 'Onlayn' : 'Offline'}</span>
                         </div>
                     </div>
                   </div>

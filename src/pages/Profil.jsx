@@ -137,7 +137,7 @@ export default function Profil() {
                   <div className="absolute top-6 right-6 flex items-center gap-2">
                     <span className="flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full text-white text-sm font-bold shadow-sm border border-white/30">
                       <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse"></div>
-                      Online
+                      {displayProfile.onlineStatus?.isOnline ? 'Onlayn' : 'Offline'}
                     </span>
                   </div>
 
