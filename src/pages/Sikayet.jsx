@@ -7,11 +7,14 @@ export default function Sikayet() {
   const [searchParams] = useSearchParams();
   const projectTitle = searchParams.get('project');
   const projectId = searchParams.get('projectId');
+  const taskTitle = searchParams.get('task');
+  const taskId = searchParams.get('taskId');
   const [formData, setFormData] = useState({
     ad: '',
     email: '',
     tip: '',
     detay: projectTitle ? `Layihə: ${projectTitle} (ID: ${projectId || 'naməlum'})\n\n`
+      : taskTitle ? `Tapşırıq: ${taskTitle} (ID: ${taskId || 'naməlum'})\n\n`
       : ''
   });
 

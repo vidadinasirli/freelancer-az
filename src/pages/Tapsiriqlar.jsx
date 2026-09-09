@@ -148,6 +148,7 @@ export default function Tapsiriqlar() {
   const [currentView, setCurrentView] = useState(initialView);
   const [selectedTask, setSelectedTask] = useState(null);
   const [selectedFreelancer, setSelectedFreelancer] = useState(null);
+  const [selectedOwner, setSelectedOwner] = useState(null);
   const [commentText, setCommentText] = useState("");
   const [proposalPrice, setProposalPrice] = useState('');
   const [proposalPriceType, setProposalPriceType] = useState('iş başına');
@@ -163,6 +164,7 @@ export default function Tapsiriqlar() {
   const [tasksLoading, setTasksLoading] = useState(true);
   const [tasksError, setTasksError] = useState("");
   const [freelancers, setFreelancers] = useState([]);
+  const [clubPosts, setClubPosts] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createForm, setCreateForm] = useState({ title: '', description: '', price: '', categories: [] });
   const [createSubmitting, setCreateSubmitting] = useState(false);
@@ -206,6 +208,9 @@ export default function Tapsiriqlar() {
   }, []);
 
   useEffect(() => { loadTasks(); loadFreelancers(); }, [loadTasks, loadFreelancers]);
+  useEffect(() => {
+    api.getClubPosts().then(setClubPosts).catch(() => setClubPosts([]));
+  }, []);
 
   const visibleFreelancers = freelancers.filter((freelancer) => {
     const query = freelancerSearch.toLowerCase();
@@ -218,6 +223,7 @@ export default function Tapsiriqlar() {
   React.useEffect(() => {
     setCurrentView(location.pathname === '/frilanserler' ? 'freelancers' : 'tasks');
     setSelectedTask(null);
+    setSelectedOwner(null);
     setSelectedFreelancer(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
@@ -227,6 +233,7 @@ export default function Tapsiriqlar() {
     try {
       const full = await api.getTask(task.id);
       setSelectedTask(full);
+      setSelectedOwner(await api.getUser(full.ownerId));
     } catch {
       setSelectedTask(task);
     }
@@ -239,8 +246,14 @@ export default function Tapsiriqlar() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleBackToTasks = () => setSelectedTask(null);
+  const handleBackToTasks = () => { setSelectedTask(null); setSelectedOwner(null); };
   const handleBackToFreelancers = () => setSelectedFreelancer(null);
+  const shareTask = async () => {
+    const url = window.location.href;
+    if (navigator.share) await navigator.share({ title: selectedTask.title, text: selectedTask.description, url });
+    else await navigator.clipboard.writeText(url);
+  };
+  const reportTask = () => navigate(`/sikayet?task=${encodeURIComponent(selectedTask.title)}&taskId=${selectedTask.id}`);
 
   const handleAddComment = async (e) => {
     e.preventDefault();
@@ -480,11 +493,11 @@ export default function Tapsiriqlar() {
                     <span className="glitch-hover" data-text='"Klub"-da yeni yazılar'>"Klub"-da yeni yazılar</span>
                   </h3>
                   <div className="space-y-6 divide-y divide-slate-200/60">
-                    {MOCK_CLUB_POSTS.map((post, i) => (
+                    {clubPosts.slice(0, 3).map((post, i) => (
                       <div key={i} className={i !== 0 ? "pt-6 group cursor-pointer" : "group cursor-pointer"}>
                         <div className="flex justify-between text-xs text-blue-500 font-bold mb-3 tracking-wide">
-                          <span className="bg-blue-50 px-2 py-1 rounded-md">{post.days} gün öncə</span>
-                          <span className="text-slate-400 bg-slate-100 px-2 py-1 rounded-md">{post.category}</span>
+                          <span className="bg-blue-50 px-2 py-1 rounded-md">{post.type}</span>
+                          <span className="text-slate-400 bg-slate-100 px-2 py-1 rounded-md">{post.author}</span>
                         </div>
                         <h4 className="font-bold text-slate-800 text-lg group-hover:text-blue-600 transition-colors mb-4 leading-snug">{post.title}</h4>
                         <div className="flex items-center gap-5 text-sm text-slate-500 font-semibold">
@@ -494,7 +507,7 @@ export default function Tapsiriqlar() {
                       </div>
                     ))}
                   </div>
-                  <button className="w-full mt-8 py-4 text-sm font-bold text-slate-700 bg-slate-100/50 hover:text-blue-600 hover:bg-blue-50 rounded-2xl transition-all border border-slate-200/50 shadow-sm hover:shadow-md">
+                  <button onClick={() => navigate('/klub')} className="w-full mt-8 py-4 text-sm font-bold text-slate-700 bg-slate-100/50 hover:text-blue-600 hover:bg-blue-50 rounded-2xl transition-all border border-slate-200/50 shadow-sm hover:shadow-md">
                     Bütün mövzular
                   </button>
                 </div>
@@ -528,10 +541,10 @@ export default function Tapsiriqlar() {
 
                   {/* Actions (Share, Flag) */}
                   <div className="absolute top-10 right-10 flex flex-col gap-4 z-10">
-                    <button className="w-14 h-14 rounded-2xl bg-white/90 backdrop-blur border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm hover:shadow-lg hover:-translate-y-1">
+                    <button onClick={shareTask} title="Tapşırığı paylaş" className="w-14 h-14 rounded-2xl bg-white/90 backdrop-blur border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm hover:shadow-lg hover:-translate-y-1">
                       <Share2 className="w-6 h-6" />
                     </button>
-                    <button className="w-14 h-14 rounded-2xl bg-white/90 backdrop-blur border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all shadow-sm hover:shadow-lg hover:-translate-y-1">
+                    <button onClick={reportTask} title="Tapşırığı bildir" className="w-14 h-14 rounded-2xl bg-white/90 backdrop-blur border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all shadow-sm hover:shadow-lg hover:-translate-y-1">
                       <Flag className="w-6 h-6" />
                     </button>
                   </div>
@@ -662,11 +675,11 @@ export default function Tapsiriqlar() {
                      <div className="relative mb-6 group">
                        <div className="w-32 h-32 rounded-[2rem] bg-gradient-to-tr from-amber-300 via-yellow-400 to-orange-400 p-1.5 shadow-xl shadow-yellow-500/20 group-hover:rotate-6 group-hover:scale-105 transition-all duration-500">
                          <div className="w-full h-full bg-white rounded-[1.6rem] flex items-center justify-center text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-amber-500 to-orange-600">
-                           {MOCK_CLIENT.avatar}
+                           {(selectedOwner?.fullName || selectedTask.ownerName || 'M').split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()}
                          </div>
                        </div>
                      </div>
-                     <h2 className="text-2xl font-black text-slate-900 mb-2 relative z-10">{MOCK_CLIENT.name}</h2>
+                     <h2 className="text-2xl font-black text-slate-900 mb-2 relative z-10">{selectedOwner?.fullName || selectedTask.ownerName || 'Sifarişçi'}</h2>
                      <div className="text-sm font-black text-slate-400 uppercase tracking-[0.25em] relative z-10">Müştəri</div>
                   </div>
 
@@ -681,7 +694,7 @@ export default function Tapsiriqlar() {
                       </h3>
                       <div className="flex justify-between items-center bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                         <span className="text-slate-600 font-bold">Baxış sayı</span>
-                        <span className="font-black text-slate-900 text-xl">{MOCK_CLIENT.stats.userViews}</span>
+                        <span className="font-black text-slate-900 text-xl">{selectedOwner?.stats?.projectViews || 0}</span>
                       </div>
                     </div>
 
@@ -693,9 +706,9 @@ export default function Tapsiriqlar() {
                       </h3>
                       <div className="space-y-3">
                         {[
-                          { label: "Tamamlanmış sifarişlər", val: MOCK_CLIENT.stats.completedOrders },
-                          { label: "Frilanser axtarışında", val: MOCK_CLIENT.stats.seekingFreelancers },
-                          { label: "Konfliktli işlər", val: MOCK_CLIENT.stats.conflictJobs }
+                          { label: "Tamamlanmış sifarişlər", val: selectedOwner?.stats?.completedOrders || 0 },
+                          { label: "Aktiv tapşırıqlar", val: selectedOwner?.stats?.activeOrders || 0 },
+                          { label: "Arbitraj işləri", val: selectedOwner?.stats?.conflictJobs || 0 }
                         ].map((stat, i) => (
                           <div key={i} className="flex justify-between items-center p-4 bg-white/50 hover:bg-white rounded-2xl transition-all border border-transparent hover:border-slate-200 hover:shadow-sm">
                             <span className="text-slate-600 font-semibold">{stat.label}</span>
@@ -707,9 +720,9 @@ export default function Tapsiriqlar() {
                         <div className="flex justify-between items-center p-4 bg-white/50 hover:bg-white rounded-2xl transition-all border border-transparent hover:border-slate-200 hover:shadow-sm">
                           <span className="text-slate-600 font-semibold">Frilanserlərin rəyi</span>
                           <div className="font-black bg-white shadow-sm border border-slate-200 px-4 py-1.5 rounded-xl flex items-center gap-1">
-                            <span className="text-emerald-500">{MOCK_CLIENT.stats.freelancerReviews.pos}</span>
+                            <span className="text-emerald-500">+0</span>
                             <span className="text-slate-300 mx-1">/</span>
-                            <span className="text-red-500">{MOCK_CLIENT.stats.freelancerReviews.neg}</span>
+                            <span className="text-red-500">-0</span>
                           </div>
                         </div>
                       </div>
@@ -718,12 +731,12 @@ export default function Tapsiriqlar() {
                     {/* Timeline Stats */}
                     <div className="pt-8 border-t border-slate-200/80 space-y-3">
                        <div className="flex justify-between items-center p-4 bg-white/50 rounded-2xl">
-                          <span className="text-slate-500 font-semibold">Qeydiyyat</span>
-                          <span className="font-bold text-slate-800">{MOCK_CLIENT.stats.registration}</span>
+                          <span className="text-slate-500 font-semibold">İzləyicilər</span>
+                          <span className="font-bold text-slate-800">{selectedOwner?.followers || 0}</span>
                         </div>
                         <div className="flex justify-between items-center p-4 bg-white/50 rounded-2xl">
-                          <span className="text-slate-500 font-semibold">Son aktivlik</span>
-                          <span className="font-bold text-slate-800">{MOCK_CLIENT.stats.lastActive}</span>
+                          <span className="text-slate-500 font-semibold">Status</span>
+                          <span className="font-bold text-slate-800">{selectedOwner?.status || 'Aktiv'}</span>
                         </div>
                     </div>
 
@@ -870,11 +883,11 @@ export default function Tapsiriqlar() {
                     <span className="glitch-hover" data-text='"Klub"-da yeni yazılar'>"Klub"-da yeni yazılar</span>
                   </h3>
                   <div className="space-y-6 divide-y divide-slate-200/60">
-                    {MOCK_CLUB_POSTS.map((post, i) => (
+                    {clubPosts.slice(0, 3).map((post, i) => (
                       <div key={i} className={i !== 0 ? "pt-6 group cursor-pointer" : "group cursor-pointer"}>
                         <div className="flex justify-between text-xs text-blue-500 font-bold mb-3 tracking-wide">
-                          <span className="bg-blue-50 px-2 py-1 rounded-md">{post.days} gün öncə</span>
-                          <span className="text-slate-400 bg-slate-100 px-2 py-1 rounded-md">{post.category}</span>
+                          <span className="bg-blue-50 px-2 py-1 rounded-md">{post.type}</span>
+                          <span className="text-slate-400 bg-slate-100 px-2 py-1 rounded-md">{post.author}</span>
                         </div>
                         <h4 className="font-bold text-slate-800 text-lg group-hover:text-blue-600 transition-colors mb-4 leading-snug">{post.title}</h4>
                         <div className="flex items-center gap-5 text-sm text-slate-500 font-semibold">
@@ -884,7 +897,7 @@ export default function Tapsiriqlar() {
                       </div>
                     ))}
                   </div>
-                  <button className="w-full mt-8 py-4 text-sm font-bold text-slate-700 bg-slate-100/50 hover:text-blue-600 hover:bg-blue-50 rounded-2xl transition-all border border-slate-200/50 shadow-sm hover:shadow-md">
+                  <button onClick={() => navigate('/klub')} className="w-full mt-8 py-4 text-sm font-bold text-slate-700 bg-slate-100/50 hover:text-blue-600 hover:bg-blue-50 rounded-2xl transition-all border border-slate-200/50 shadow-sm hover:shadow-md">
                     Bütün mövzular
                   </button>
                 </div>
