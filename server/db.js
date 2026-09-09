@@ -1,10 +1,13 @@
 import Database from 'better-sqlite3';
 import bcrypt from 'bcryptjs';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const dbPath = path.join(__dirname, 'data', 'freelancer.db');
+const dataDirectory = path.join(__dirname, 'data');
+fs.mkdirSync(dataDirectory, { recursive: true });
+const dbPath = path.join(dataDirectory, 'freelancer.db');
 
 export const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');
