@@ -57,33 +57,41 @@ function uploadToCloudinary(file, userId) {
   });
 }
 
-router.post('/media', requireAuth, upload.single('file'), (req, res) => {
+function saveLocally(file, userId, req) {
+  const extension = allowedTypes.get(file.mimetype);
+  const filename = `${userId}-${Date.now()}-${crypto.randomUUID()}${extension}`;
+  fs.writeFileSync(path.join(uploadDirectory, filename), file.buffer);
+  return {
+    url: `${req.protocol}://${req.get('host')}/uploads/${filename}`,
+    filename,
+    mimeType: file.mimetype,
+    size: file.size,
+    provider: 'local',
+  };
+}
+
+router.post('/media', requireAuth, upload.single('file'), async (req, res, next) => {
   if (!req.file) return res.status(400).json({ error: 'Yükləmək üçün fayl seçin.' });
   if (cloudinaryConfigured) {
-    return uploadToCloudinary(req.file, req.userId)
-      .then((result) => res.status(201).json({
+    try {
+      const result = await uploadToCloudinary(req.file, req.userId);
+      return res.status(201).json({
         url: result.secure_url,
         publicId: result.public_id,
         mimeType: req.file.mimetype,
         size: req.file.size,
         provider: 'cloudinary',
-      }))
-      .catch((error) => {
-        console.error('Cloudinary upload failed:', error);
-        res.status(502).json({ error: 'Media storage xidməti hazırda əlçatan deyil.' });
       });
+    } catch (error) {
+      console.error('Cloudinary upload failed, using local fallback:', error);
+    }
   }
 
-  const extension = allowedTypes.get(req.file.mimetype);
-  const filename = `${req.userId}-${Date.now()}-${crypto.randomUUID()}${extension}`;
-  fs.writeFileSync(path.join(uploadDirectory, filename), req.file.buffer);
-  return res.status(201).json({
-    url: `${req.protocol}://${req.get('host')}/uploads/${filename}`,
-    filename,
-    mimeType: req.file.mimetype,
-    size: req.file.size,
-    provider: 'local',
-  });
+  try {
+    return res.status(201).json(saveLocally(req.file, req.userId, req));
+  } catch (error) {
+    return next(error);
+  }
 });
 
 router.use((error, req, res, next) => {

@@ -84,6 +84,8 @@ export const api = {
   updateOnlineStatus: (isOnline) => request('/social/status', { method: 'PUT', body: { isOnline } }),
   getOnlineStatus: (id) => request(`/social/status/${id}`, { auth: false }),
   uploadMedia: (file) => {
+    if (!file) return Promise.reject(new Error('Yükləmək üçün fayl seçin.'));
+    if (file.size > 50 * 1024 * 1024) return Promise.reject(new Error('Fayl ölçüsü 50 MB-dan böyük ola bilməz.'));
     const body = new FormData();
     body.append('file', file);
     return request('/uploads/media', { method: 'POST', body });
