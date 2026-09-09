@@ -198,12 +198,12 @@ export default function Tapsiriqlar() {
         reviews: { pos: '+0', neg: '-0' },
         description: profile.about || 'Profil məlumatı əlavə edilməyib.',
         skills: profile.activityAreas || [],
-        stats: { views: 0, completedOrders: 0, conflictJobs: 0, customerReviews: { pos: '+0', neg: '-0' }, registration: '', lastActive: '' },
+        stats: { ...(profile.stats || {}), views: profile.stats?.projectViews || 0, customerReviews: { pos: '+0', neg: '-0' }, registration: profile.createdAt || '', lastActive: profile.status || 'Aktiv' },
         coverImage: profile.bannerUrl || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=1200',
-        portfolio: [],
+        portfolio: profile.projects || [],
       })));
     } catch {
-      // freelancer listing is non-critical; fall back to mock below
+      setTasksError('Freelancer siyahısını yükləmək mümkün olmadı.');
     }
   }, []);
 
@@ -241,8 +241,26 @@ export default function Tapsiriqlar() {
 
   const handleTaskClick = (task) => openTaskDetail(task);
 
-  const handleFreelancerClick = (freelancer) => {
-    setSelectedFreelancer(freelancer);
+  const handleFreelancerClick = async (freelancer) => {
+    try {
+      const profile = await api.getUser(freelancer.id);
+      setSelectedFreelancer({
+        ...freelancer,
+        ...profile,
+        name: profile.fullName,
+        username: `@${(profile.nickname || profile.fullName).toLowerCase().replace(/\s+/g, '')}`,
+        title: profile.status || 'Freelancer',
+        price: profile.hourlyRate || 0,
+        priceText: profile.rateType || '-dən başlayır',
+        description: profile.about || 'Profil məlumatı əlavə edilməyib.',
+        skills: profile.activityAreas || [],
+        coverImage: profile.bannerUrl || freelancer.coverImage,
+        portfolio: profile.projects || [],
+        stats: { ...(profile.stats || {}), views: profile.stats?.projectViews || 0, customerReviews: { pos: '+0', neg: '-0' }, registration: profile.createdAt || '', lastActive: profile.status || 'Aktiv' },
+      });
+    } catch {
+      setSelectedFreelancer(freelancer);
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -762,7 +780,7 @@ export default function Tapsiriqlar() {
                   
                   <div className="flex justify-between items-end mb-8">
                     <div>
-                      <h1 className="text-3xl font-black text-gradient tracking-tight mb-2">Frilanserlər (804)</h1>
+                      <h1 className="text-3xl font-black text-gradient tracking-tight mb-2">Frilanserlər ({freelancers.length})</h1>
                       <p className="text-slate-500 font-medium text-lg">Layihəniz üçün ən yaxşı <span className="text-blue-600 font-bold">mütəxəssisləri</span> tapın</p>
                     </div>
                   </div>
@@ -988,14 +1006,11 @@ export default function Tapsiriqlar() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                       {selectedFreelancer.portfolio.map((item) => (
                         <div key={item.id} className="group cursor-pointer">
-                          <div className={`aspect-square ${item.bg} rounded-2xl p-6 relative overflow-hidden flex flex-col justify-end shadow-sm group-hover:shadow-md transition-shadow`}>
-                            {item.type === 'design' && (
-                               <div className="absolute inset-0 flex items-center justify-center opacity-80 group-hover:scale-110 transition-transform duration-500">
-                                  <ImageIcon className="w-24 h-24 text-white/50" />
-                               </div>
-                            )}
+                          <div className="aspect-square rounded-2xl p-6 relative overflow-hidden flex flex-col justify-end shadow-sm group-hover:shadow-md transition-shadow bg-slate-100">
+                            {item.image ? <img src={item.image} alt={item.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <div className="absolute inset-0 flex items-center justify-center opacity-80 group-hover:scale-110 transition-transform duration-500"><ImageIcon className="w-24 h-24 text-blue-300" /></div>}
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
                             <div className="absolute top-4 left-4 bg-black/40 backdrop-blur text-white text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1 z-10">
-                              <Eye className="w-3 h-3" /> {item.views}
+                              <Eye className="w-3 h-3" /> {item.views || 0}
                             </div>
                             <h3 className="relative z-10 text-white font-black text-xl drop-shadow-md">{item.title}</h3>
                           </div>
@@ -1070,7 +1085,7 @@ export default function Tapsiriqlar() {
                       <div className="space-y-2">
                         {[
                           { label: "Tamamlanmış sifarişlər", val: selectedFreelancer.stats.completedOrders },
-                          { label: "Konfliktli işlər", val: selectedFreelancer.stats.conflictJobs }
+                          { label: "Arbitraj işləri", val: selectedFreelancer.stats.conflictJobs || 0 }
                         ].map((stat, i) => (
                           <div key={i} className="flex justify-between items-center p-3 bg-slate-50/50 hover:bg-slate-50 rounded-xl transition-colors border border-transparent hover:border-slate-100">
                             <span className="text-slate-600 font-semibold">{stat.label}</span>
@@ -1093,12 +1108,12 @@ export default function Tapsiriqlar() {
                     {/* Timeline */}
                     <div className="pt-6 border-t border-slate-100 space-y-3 text-sm">
                         <div className="flex justify-between items-center p-3 bg-white rounded-xl shadow-sm border border-slate-50">
-                          <span className="text-slate-500 font-semibold">Qeydiyyat</span>
-                          <span className="font-bold text-slate-800">{selectedFreelancer.stats.registration}</span>
+                          <span className="text-slate-500 font-semibold">İzləyicilər</span>
+                          <span className="font-bold text-slate-800">{selectedFreelancer.followers || 0}</span>
                         </div>
                         <div className="flex justify-between items-center p-3 bg-white rounded-xl shadow-sm border border-slate-50">
-                          <span className="text-slate-500 font-semibold">Son aktivlik</span>
-                          <span className="font-bold text-slate-800">{selectedFreelancer.stats.lastActive}</span>
+                          <span className="text-slate-500 font-semibold">Status</span>
+                          <span className="font-bold text-slate-800">{selectedFreelancer.status || 'Aktiv'}</span>
                         </div>
                     </div>
                   </div>
