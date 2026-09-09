@@ -18,6 +18,13 @@ router.get('/:id', (req, res) => {
   profile.socialLinks = db.prepare('SELECT github, instagram, linkedin, facebook, displayLink1, displayLink2 FROM social_links WHERE userId = ?').get(row.id) || {};
   profile.specialties = db.prepare('SELECT id, category, title, about, hourlyRate, experience FROM freelancer_specialties WHERE freelancerId = ? ORDER BY createdAt DESC').all(row.id);
   profile.followers = db.prepare('SELECT COUNT(*) count FROM follows WHERE followingId = ?').get(row.id).count;
+  profile.projects = db.prepare('SELECT id, title, category, imageUrl AS image, description, likes, views, createdAt FROM projects WHERE ownerId = ? ORDER BY createdAt DESC').all(row.id);
+  profile.stats = {
+    completedOrders: db.prepare("SELECT COUNT(*) count FROM tasks t JOIN applications a ON a.taskId = t.id WHERE a.freelancerId = ? AND t.status = 'tamamlandı'").get(row.id).count,
+    activeOrders: db.prepare("SELECT COUNT(*) count FROM tasks t JOIN applications a ON a.taskId = t.id WHERE a.freelancerId = ? AND t.status = 'davam edir'").get(row.id).count,
+    conflictJobs: db.prepare("SELECT COUNT(*) count FROM tasks t JOIN applications a ON a.taskId = t.id WHERE a.freelancerId = ? AND t.status = 'arbitraj'").get(row.id).count,
+    projectViews: db.prepare('SELECT COALESCE(SUM(views), 0) total FROM projects WHERE ownerId = ?').get(row.id).total,
+  };
   return res.json(profile);
 });
 

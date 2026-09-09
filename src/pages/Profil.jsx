@@ -42,11 +42,16 @@ const CATEGORIES = {
 export default function Profil() {
   const { user, profileData } = useAuth();
   const navigate = useNavigate();
+  const [displayProfile, setDisplayProfile] = useState(profileData);
   const [view, setView] = useState('profile'); // 'profile' or 'add-portfolio'
   const [activeCategory, setActiveCategory] = useState('it');
   const [portfolio, setPortfolio] = useState({ title: '', description: '', category: 'Dizayn', imageUrl: '', mediaFile: null });
   const [portfolioMessage, setPortfolioMessage] = useState('');
   const [projects, setProjects] = useState([]);
+
+  useEffect(() => {
+    if (profileData?.id) api.getUser(profileData.id).then(setDisplayProfile).catch(() => setDisplayProfile(profileData));
+  }, [profileData]);
 
   useEffect(() => {
     if (profileData?.id) api.getProjects({ ownerId: profileData.id }).then(setProjects).catch(() => {});
@@ -125,7 +130,7 @@ export default function Profil() {
               <div className="glass-panel rounded-3xl overflow-hidden shadow-[0_15px_40px_-15px_rgba(0,0,0,0.05)] border border-slate-200/60 relative">
                 
                 {/* Banner Background */}
-                <div className="h-64 hero-pattern relative" style={profileData.bannerUrl ? { backgroundImage: `url(${profileData.bannerUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}>
+                <div className="h-64 hero-pattern relative" style={displayProfile.bannerUrl ? { backgroundImage: `url(${displayProfile.bannerUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}>
                   {/* Decorative skyline silhouette mockup using CSS */}
                   <div className="absolute bottom-0 left-0 w-full h-32 opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIj48cGF0aCBkPSJNMCAxMDBMMCA4MEwxMCA4MEwxMCA2MEwyMCA2MEwyMCA5MEwzMCA5MEwzMCA1MEw0MCA1MEw0MCA3MEw1MCA3MEw1MCA0MEw2MCA0MEw2MCA4MEw3MCA4MEw3MCAzMEw4MCAzMEw4MCA5MEw5MCA5MEw5MCAxMDBaIiBmaWxsPSIjMDAwIi8+PC9zdmc+')] bg-repeat-x bg-[length:100px_100%]"></div>
                   
@@ -153,14 +158,14 @@ export default function Profil() {
                     
                     {/* Avatar (Overlapping banner) */}
                     <div className="w-32 h-32 rounded-3xl bg-slate-100 border-4 border-white shadow-xl flex items-center justify-center font-bold text-slate-400 text-4xl -mt-16 relative z-10 overflow-hidden">
-                      {profileData.avatarUrl ? <img src={profileData.avatarUrl} alt={profileData.fullName} className="w-full h-full object-cover" /> : <UserIconPlaceholder />}
+                      {displayProfile.avatarUrl ? <img src={displayProfile.avatarUrl} alt={displayProfile.fullName} className="w-full h-full object-cover" /> : <UserIconPlaceholder />}
                     </div>
 
                     <div className="flex-1 pt-4">
                       <div className="flex items-center gap-3 mb-1">
-                        <h1 className="text-3xl font-black text-slate-900">{profileData.fullName || user?.fullName || 'İstifadəçi'}</h1>
+                        <h1 className="text-3xl font-black text-slate-900">{displayProfile.fullName || user?.fullName || 'İstifadəçi'}</h1>
                       </div>
-                      <p className="text-slate-500 font-medium mb-4">@{(profileData.fullName || 'istifadeci').toLowerCase().replace(/\s+/g, '')}</p>
+                      <p className="text-slate-500 font-medium mb-4">@{(displayProfile.nickname || displayProfile.fullName || 'istifadeci').toLowerCase().replace(/\s+/g, '')}</p>
                       
                       {user?.id !== profileData?.id && <button onClick={() => navigate(`/mesajlar?to=${profileData.id}`)} className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold px-5 py-2.5 rounded-xl transition-colors border border-blue-200/50 shadow-sm">
                         <MessageCircle className="w-5 h-5" />
@@ -211,7 +216,7 @@ export default function Profil() {
                     <strong className="text-slate-900 font-black">Professional təcrübə:</strong> bir ildən azdır
                   </p>
                   <div className="pt-4 text-slate-600 font-medium">
-                    {profileData.about || 'Bu freelancer hələ bio məlumatı əlavə etməyib.'}
+                    {displayProfile.about || 'Bu freelancer hələ bio məlumatı əlavə etməyib.'}
                   </div>
                 </div>
               </div>
@@ -229,18 +234,18 @@ export default function Profil() {
                   <h3 className="font-black text-slate-900 mb-6">Statistika</h3>
                   <div className="flex justify-between items-center mb-8">
                     <span className="text-slate-500 font-medium">Baxış sayı</span>
-                    <span className="font-black text-slate-900 text-lg">1</span>
+                    <span className="font-black text-slate-900 text-lg">{displayProfile.stats?.projectViews || 0}</span>
                   </div>
 
                   <h3 className="font-black text-slate-900 mb-6">Frilanserin statistikası</h3>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
                       <span className="text-slate-500 font-medium">Tamamlanmış sifarişlər</span>
-                      <span className="font-black text-slate-900">0</span>
+                      <span className="font-black text-slate-900">{displayProfile.stats?.completedOrders || 0}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-500 font-medium">Konfliktli işlər</span>
-                      <span className="font-black text-slate-900">0</span>
+                      <span className="text-slate-500 font-medium">Davam edən sifarişlər</span>
+                      <span className="font-black text-slate-900">{displayProfile.stats?.activeOrders || 0}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-slate-500 font-medium">Müştərilərin rəyi</span>
@@ -254,12 +259,12 @@ export default function Profil() {
 
                   <div className="pt-6 mt-6 border-t border-slate-100 space-y-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-500 font-medium">Qeydiyyat</span>
-                      <span className="font-bold text-slate-900">19/08/2026</span>
+                      <span className="text-slate-500 font-medium">İzləyicilər</span>
+                      <span className="font-bold text-slate-900">{displayProfile.followers || 0}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-500 font-medium">Son aktivlik</span>
-                      <span className="font-bold text-slate-900">0 saniyə öncə</span>
+                      <span className="text-slate-500 font-medium">Təcrübə</span>
+                      <span className="font-bold text-slate-900">{displayProfile.experience || 'Göstərilməyib'}</span>
                     </div>
                   </div>
                 </div>
@@ -267,7 +272,8 @@ export default function Profil() {
                 {/* Contact Block */}
                 <div className="p-8 border-t border-slate-200/60">
                   <h3 className="font-black text-slate-900 mb-3">Frilanser ilə əlaqə</h3>
-                  <p className="text-slate-400 font-medium text-sm">Heç bir əlaqə təyin edilməyib.</p>
+                  {Object.entries(displayProfile.socialLinks || {}).filter(([key, value]) => ['github', 'instagram', 'linkedin', 'facebook'].includes(key) && value).map(([key, value]) => <a key={key} href={value} target="_blank" rel="noreferrer" className="block text-blue-600 hover:underline text-sm font-semibold">{key}</a>)}
+                  {!Object.entries(displayProfile.socialLinks || {}).some(([key, value]) => ['github', 'instagram', 'linkedin', 'facebook'].includes(key) && value) && <p className="text-slate-400 font-medium text-sm">Heç bir sosial link təyin edilməyib.</p>}
                 </div>
 
               </div>

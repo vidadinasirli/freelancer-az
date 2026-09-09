@@ -27,6 +27,7 @@ export function toProfile(row) {
     nickname: row.nickname || '',
     phone: row.phone || '',
     privacySettings: safeParseObject(row.privacySettings),
+    createdAt: row.createdAt || '',
   };
 }
 
