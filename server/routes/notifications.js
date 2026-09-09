@@ -3,11 +3,15 @@ import { db } from '../db.js';
 import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
-router.get('/', requireAuth, (req, res) => {
-  res.json(db.prepare('SELECT * FROM notifications WHERE userId = ? ORDER BY createdAt DESC LIMIT 100').all(req.userId));
+router.get('/', requireAuth, async (req, res, next) => {
+ try {
+  res.json(await db.all('SELECT * FROM notifications WHERE userId = ? ORDER BY createdAt DESC LIMIT 100', [req.userId]));
+ } catch (error) { next(error); }
 });
-router.post('/read', requireAuth, (req, res) => {
-  db.prepare('UPDATE notifications SET isRead = 1 WHERE userId = ?').run(req.userId);
+router.post('/read', requireAuth, async (req, res, next) => {
+ try {
+  await db.run('UPDATE notifications SET isRead = TRUE WHERE userId = ?', [req.userId]);
   res.json({ success: true });
+ } catch (error) { next(error); }
 });
 export default router;

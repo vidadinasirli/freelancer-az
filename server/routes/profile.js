@@ -5,13 +5,16 @@ import { toProfile } from '../helpers.js';
 
 const router = Router();
 
-router.get('/', requireAuth, (req, res) => {
-  const row = db.prepare('SELECT * FROM users WHERE id = ?').get(req.userId);
+router.get('/', requireAuth, async (req, res, next) => {
+ try {
+  const row = await db.get('SELECT * FROM users WHERE id = ?', [req.userId]);
   res.json(toProfile(row));
+ } catch (error) { next(error); }
 });
 
-router.put('/', requireAuth, (req, res) => {
-  const current = db.prepare('SELECT * FROM users WHERE id = ?').get(req.userId);
+router.put('/', requireAuth, async (req, res, next) => {
+ try {
+  const current = await db.get('SELECT * FROM users WHERE id = ?', [req.userId]);
   if (!current) return res.status(404).json({ error: 'İstifadəçi tapılmadı.' });
 
   const body = req.body || {};
@@ -31,32 +34,40 @@ router.put('/', requireAuth, (req, res) => {
     privacySettings: body.privacySettings ? JSON.stringify(body.privacySettings) : current.privacySettings,
   };
 
-  db.prepare(`UPDATE users SET fullName=@fullName, about=@about, avatarUrl=@avatarUrl, bannerUrl=@bannerUrl,
-    isProfileVisible=@isProfileVisible, status=@status, activityAreas=@activityAreas, experience=@experience,
-    hourlyRate=@hourlyRate, rateType=@rateType, nickname=@nickname, phone=@phone,
-    privacySettings=@privacySettings WHERE id=${req.userId}`).run(updated);
+  await db.run(`UPDATE users SET fullName=?, about=?, avatarUrl=?, bannerUrl=?, isProfileVisible=?,
+    status=?, activityAreas=?, experience=?, hourlyRate=?, rateType=?, nickname=?, phone=?, privacySettings=? WHERE id=?`,
+    [updated.fullName, updated.about, updated.avatarUrl, updated.bannerUrl, Boolean(updated.isProfileVisible),
+      updated.status, updated.activityAreas, updated.experience, updated.hourlyRate, updated.rateType,
+      updated.nickname, updated.phone, updated.privacySettings, req.userId]);
 
-  const row = db.prepare('SELECT * FROM users WHERE id = ?').get(req.userId);
+  const row = await db.get('SELECT * FROM users WHERE id = ?', [req.userId]);
   res.json(toProfile(row));
+ } catch (error) { next(error); }
 });
 
-router.get('/specialties', requireAuth, (req, res) => {
-  res.json(db.prepare('SELECT * FROM freelancer_specialties WHERE freelancerId = ? ORDER BY createdAt DESC').all(req.userId));
+router.get('/specialties', requireAuth, async (req, res, next) => {
+ try {
+  res.json(await db.all('SELECT * FROM freelancer_specialties WHERE freelancerId = ? ORDER BY createdAt DESC', [req.userId]));
+ } catch (error) { next(error); }
 });
 
-router.post('/specialties', requireAuth, (req, res) => {
+router.post('/specialties', requireAuth, async (req, res, next) => {
+ try {
   const { category, title, about, hourlyRate, experience } = req.body || {};
   if (req.userRole !== 'freelancer') return res.status(403).json({ error: 'Yalnız freelancerlər ixtisas əlavə edə bilər.' });
   if (!category?.trim() || !title?.trim()) return res.status(400).json({ error: 'Kateqoriya və başlıq tələb olunur.' });
-  const result = db.prepare(`INSERT INTO freelancer_specialties (freelancerId, category, title, about, hourlyRate, experience)
-    VALUES (?, ?, ?, ?, ?, ?)`).run(req.userId, category.trim(), title.trim(), about?.trim() || '', Number(hourlyRate) || 0, experience || '');
-  res.status(201).json(db.prepare('SELECT * FROM freelancer_specialties WHERE id = ?').get(result.lastInsertRowid));
+  const result = await db.run(`INSERT INTO freelancer_specialties (freelancerId, category, title, about, hourlyRate, experience)
+    VALUES (?, ?, ?, ?, ?, ?) RETURNING id`, [req.userId, category.trim(), title.trim(), about?.trim() || '', Number(hourlyRate) || 0, experience || '']);
+  res.status(201).json(await db.get('SELECT * FROM freelancer_specialties WHERE id = ?', [result.lastInsertRowid]));
+ } catch (error) { next(error); }
 });
 
-router.delete('/specialties/:id', requireAuth, (req, res) => {
-  const result = db.prepare('DELETE FROM freelancer_specialties WHERE id = ? AND freelancerId = ?').run(req.params.id, req.userId);
+router.delete('/specialties/:id', requireAuth, async (req, res, next) => {
+ try {
+  const result = await db.run('DELETE FROM freelancer_specialties WHERE id = ? AND freelancerId = ?', [req.params.id, req.userId]);
   if (!result.changes) return res.status(404).json({ error: 'İxtisas tapılmadı.' });
   res.json({ success: true });
+ } catch (error) { next(error); }
 });
 
 export default router;

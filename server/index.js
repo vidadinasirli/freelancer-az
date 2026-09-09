@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
-import './db.js';
+import { db, dbReady } from './db.js';
 import authRoutes from './routes/auth.js';
 import profileRoutes from './routes/profile.js';
 import taskRoutes from './routes/tasks.js';
@@ -27,7 +27,14 @@ app.use('/uploads', express.static(path.join(__dirname, 'data', 'uploads'), {
   index: false,
 }));
 
-app.get('/api/health', (req, res) => res.json({ ok: true }));
+app.get('/api/health', async (req, res) => {
+  try {
+    await dbReady;
+    res.json({ ok: true, database: { ready: true, provider: db.isPostgres ? 'postgres' : 'sqlite' } });
+  } catch (error) {
+    res.status(503).json({ ok: false, database: { ready: false } });
+  }
+});
 
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
@@ -46,6 +53,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Server xətası baş verdi.' });
 });
 
+await dbReady;
 app.listen(PORT, () => {
-  console.log(`Freelancer.az backend http://localhost:${PORT} ünvanında işləyir`);
+  console.log(`Freelancer.az backend http://localhost:${PORT} ünvanında işləyir (${db.isPostgres ? 'PostgreSQL' : 'SQLite'} database)`);
 });

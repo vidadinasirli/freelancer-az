@@ -32,6 +32,7 @@ export function toProfile(row) {
 }
 
 export function safeParseArray(str) {
+  if (Array.isArray(str)) return str;
   try {
     const v = JSON.parse(str || '[]');
     return Array.isArray(v) ? v : [];
@@ -41,6 +42,7 @@ export function safeParseArray(str) {
 }
 
 export function safeParseObject(str) {
+  if (str && typeof str === 'object' && !Array.isArray(str)) return str;
   try {
     const value = JSON.parse(str || '{}');
     return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
