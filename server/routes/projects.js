@@ -20,7 +20,7 @@ router.get('/', optionalAuth, async (req, res, next) => {
     JOIN users u ON u.id = p.ownerId
     WHERE (? = '' OR p.title LIKE '%' || ? || '%' OR u.fullName LIKE '%' || ? || '%')
       AND (? = '' OR p.category = ?)
-      AND (? = '' OR p.ownerId = ?)
+      AND (? = '' OR p.ownerId::text = ?)
     ORDER BY p.createdAt DESC`, [search, search, search, category, category, ownerId, ownerId]);
   res.json(rows.map(toProject));
  } catch (error) { next(error); }
