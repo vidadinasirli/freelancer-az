@@ -5,7 +5,11 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const dataDirectory = path.join(__dirname, 'data');
-const usePostgres = Boolean(process.env.DATABASE_URL);
+const rawDatabaseUrl = process.env.DATABASE_URL?.trim() || '';
+// Accept an accidentally pasted dotenv assignment while keeping the actual
+// connection value isolated from other environment variables.
+const databaseUrl = rawDatabaseUrl.replace(/^DATABASE_URL\s*=\s*/i, '');
+const usePostgres = Boolean(databaseUrl);
 let client;
 let sqlite = false;
 let initializing = true;
@@ -177,7 +181,7 @@ function postgresParams(params) {
 async function initialize() {
   if (usePostgres) {
     const postgres = (await import('postgres')).default;
-    client = postgres(process.env.DATABASE_URL, {
+    client = postgres(databaseUrl, {
       max: Number(process.env.DATABASE_POOL_SIZE || 10),
       idle_timeout: 20,
       connect_timeout: 10,
