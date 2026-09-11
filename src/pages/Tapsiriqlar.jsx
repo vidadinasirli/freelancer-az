@@ -761,8 +761,10 @@ export default function Tapsiriqlar() {
                         <div className="flex items-start gap-5 w-full sm:w-auto">
                           <div className="relative">
                             <div className="w-20 h-20 rounded-[1.5rem] bg-gradient-to-tr from-blue-400 to-cyan-400 p-1 shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform duration-300">
-                              <div className="w-full h-full bg-white rounded-[1.3rem] flex items-center justify-center text-2xl font-black text-transparent bg-clip-text bg-gradient-to-br from-blue-600 to-cyan-600">
-                                {freelancer.avatar}
+                              <div className="w-full h-full bg-white rounded-[1.3rem] overflow-hidden flex items-center justify-center text-2xl font-black text-transparent bg-clip-text bg-gradient-to-br from-blue-600 to-cyan-600">
+                                {freelancer.avatarUrl ? (
+                                  <img src={freelancer.avatarUrl} alt={freelancer.name} className="w-full h-full object-cover" />
+                                ) : freelancer.avatar}
                               </div>
                             </div>
                             {freelancer.isVerified && (
@@ -908,8 +910,10 @@ export default function Tapsiriqlar() {
                       {/* Avatar */}
                       <div className="relative group">
                         <div className="w-32 h-32 rounded-[2rem] bg-gradient-to-tr from-blue-400 to-cyan-400 p-1.5 shadow-2xl shadow-blue-500/30 group-hover:scale-105 transition-transform duration-300 bg-white">
-                           <div className="w-full h-full bg-white rounded-[1.6rem] flex items-center justify-center text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-blue-600 to-cyan-600">
-                             {selectedFreelancer.avatar}
+                           <div className="w-full h-full bg-white rounded-[1.6rem] overflow-hidden flex items-center justify-center text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-blue-600 to-cyan-600">
+                             {selectedFreelancer.avatarUrl ? (
+                               <img src={selectedFreelancer.avatarUrl} alt={selectedFreelancer.name} className="w-full h-full object-cover" />
+                             ) : selectedFreelancer.avatar}
                            </div>
                         </div>
                         {selectedFreelancer.isVerified && (
