@@ -360,9 +360,9 @@ export default function Tapsiriqlar() {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-                    <input value={taskSearch} onChange={(e) => setTaskSearch(e.target.value)} placeholder="Tapşırıq axtarışı..." className="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20" />
-                    <select value={taskCategory} onChange={(e) => setTaskCategory(e.target.value)} className="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none bg-white">
+                  <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                    <input value={taskSearch} onChange={(e) => setTaskSearch(e.target.value)} placeholder="Tapşırıq axtarışı..." className="w-full min-w-0 px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20" />
+                    <select value={taskCategory} onChange={(e) => setTaskCategory(e.target.value)} className="w-full sm:w-56 px-4 py-3 border border-slate-200 rounded-xl outline-none bg-white font-semibold text-slate-600 focus:ring-2 focus:ring-blue-500/20">
                       <option value="">Bütün kateqoriyalar</option>
                       {TASK_CATEGORY_OPTIONS.map((category) => <option key={category} value={category}>{category}</option>)}
                     </select>
@@ -474,7 +474,7 @@ export default function Tapsiriqlar() {
               <div className="lg:col-span-8 space-y-8">
                 
                 {/* Header & Search */}
-                <div className="glass-panel rounded-3xl p-8 shadow-[0_15px_40px_-15px_rgba(0,0,0,0.05)] relative overflow-hidden">
+                <div className="glass-panel rounded-3xl p-8 shadow-[0_15px_40px_-15px_rgba(0,0,0,0.05)] relative overflow-visible z-30">
                   <button 
                     onClick={handleBackToTasks}
                     className="flex items-center gap-3 text-slate-600 hover:text-blue-600 font-bold transition-all glass-panel px-6 py-3 rounded-2xl shadow-sm w-fit hover:shadow-md hover:-translate-x-2 group"
@@ -722,7 +722,7 @@ export default function Tapsiriqlar() {
                     </div>
                   </div>
                   
-                  <div className="flex w-full bg-white/90 backdrop-blur border border-slate-200/80 rounded-2xl overflow-visible focus-within:ring-4 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all shadow-sm group relative z-20">
+                  <div className="flex w-full bg-white/90 backdrop-blur border border-slate-200/80 rounded-2xl overflow-visible focus-within:ring-4 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all shadow-sm group relative z-50">
                     <div className="flex items-center pl-6 pr-3 text-slate-400 group-focus-within:text-blue-500 transition-colors">
                       <Search className="w-6 h-6" />
                     </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Clock, Eye, Loader2, MessageCircle, Search, Send, Share2 } from 'lucide-react';
+import { ArrowLeft, Check, ChevronDown, Clock, Eye, Loader2, MessageCircle, Search, Send, Share2, SlidersHorizontal } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { api } from '../lib/api.js';
 
@@ -12,6 +12,8 @@ export default function Klub() {
   const [posts, setPosts] = useState([]);
   const [selected, setSelected] = useState(null);
   const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('');
+  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
   const [comment, setComment] = useState('');
   const [postTitle, setPostTitle] = useState('');
   const [postContent, setPostContent] = useState('');
@@ -29,6 +31,8 @@ export default function Klub() {
       .finally(() => active && setLoading(false));
     return () => { active = false; };
   }, [search]);
+
+  const visiblePosts = posts.filter((post) => !category || post.type === category);
 
   const openPost = async (post) => {
     try {
@@ -68,9 +72,9 @@ export default function Klub() {
                   <button onClick={() => setShowComposer((value) => !value)} className="text-sm font-bold text-white bg-blue-600 px-4 py-2 rounded-xl">Yazı paylaş</button>
                 </div>
                 {showComposer && <form onSubmit={createPost} className="space-y-3 mb-5 p-4 bg-blue-50 rounded-2xl"><input value={postTitle} onChange={(event) => setPostTitle(event.target.value)} required placeholder="Başlıq" className="w-full px-3 py-2 rounded-lg border border-slate-200" /><select value={postType} onChange={(event) => setPostType(event.target.value)} className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white"><option value="müzakirə">Müzakirə</option><option value="sual">Sual</option><option value="elan">Elan</option><option value="təcrübə">Təcrübə</option></select><textarea value={postContent} onChange={(event) => setPostContent(event.target.value)} required placeholder="Məzmun" className="w-full px-3 py-2 rounded-lg border border-slate-200 min-h-24" /><input type="file" accept="image/*,video/*,audio/*,application/pdf" onChange={(event) => setPostFile(event.target.files?.[0] || null)} className="w-full text-sm" /><button className="px-4 py-2 bg-slate-900 text-white rounded-lg font-semibold">Dərc et</button></form>}
-                <label className="flex items-center border border-slate-200 rounded-xl overflow-hidden"><Search className="ml-4 w-5 h-5 text-slate-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Post axtarışı" className="w-full min-w-0 px-3 py-3 outline-none" /></label>
+                <div className="relative z-30 flex items-center border border-slate-200 rounded-xl overflow-visible bg-white"><Search className="ml-4 w-5 h-5 text-slate-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Post axtarışı" className="w-full min-w-0 px-3 py-3 outline-none" /><div className="relative border-l border-slate-200 shrink-0"><button type="button" onClick={() => setCategoryMenuOpen((open) => !open)} className="h-12 px-3 flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-blue-600"><SlidersHorizontal className="w-4 h-4" /><span>{category || 'Kateqoriya'}</span><ChevronDown className={`w-4 h-4 ${categoryMenuOpen ? 'rotate-180' : ''}`} /></button>{categoryMenuOpen && <div className="absolute right-0 top-[calc(100%+10px)] w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl">{['', 'müzakirə', 'sual', 'elan', 'təcrübə'].map((item) => <button key={item || 'all'} type="button" onClick={() => { setCategory(item); setCategoryMenuOpen(false); }} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left text-sm font-semibold ${category === item ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-50'}`}>{item || 'Bütün kateqoriyalar'}{category === item && <Check className="w-4 h-4" />}</button>)}</div>}</div></div>
               </header>
-              {loading ? <div className="py-16 flex justify-center text-blue-600"><Loader2 className="animate-spin" /></div> : posts.map((post) => <article key={post.id} onClick={() => openPost(post)} className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-7 cursor-pointer hover:border-blue-300 hover:shadow-lg transition-all"><div className="flex flex-wrap justify-between gap-3"><h2 className="text-lg sm:text-xl font-bold text-slate-900">{post.title}</h2><span className="text-xs uppercase text-blue-600 bg-blue-50 px-2 py-1 rounded">{post.type}</span></div><div className="flex flex-wrap gap-4 text-sm text-slate-500 mt-4"><span><MessageCircle className="inline w-4 h-4" /> {post.comments} rəy</span><span><Eye className="inline w-4 h-4" /> {post.views} baxış</span><span><Clock className="inline w-4 h-4" /> {daysAgo(post.createdAt)} gün öncə</span></div><p className="text-slate-500 mt-4 line-clamp-2">{post.content}</p>{post.mediaUrl && (post.mediaUrl.match(/\.(mp4|webm)$/i) ? <video src={post.mediaUrl} controls className="mt-4 max-h-64 w-full rounded-xl" /> : <img src={post.mediaUrl} alt="" className="mt-4 max-h-64 w-full rounded-xl object-cover" />)}</article>)}
+              {loading ? <div className="py-16 flex justify-center text-blue-600"><Loader2 className="animate-spin" /></div> : visiblePosts.map((post) => <article key={post.id} onClick={() => openPost(post)} className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-7 cursor-pointer hover:border-blue-300 hover:shadow-lg transition-all"><div className="flex flex-wrap justify-between gap-3"><h2 className="text-lg sm:text-xl font-bold text-slate-900">{post.title}</h2><span className="text-xs uppercase text-blue-600 bg-blue-50 px-2 py-1 rounded">{post.type}</span></div><div className="flex flex-wrap gap-4 text-sm text-slate-500 mt-4"><span><MessageCircle className="inline w-4 h-4" /> {post.comments} rəy</span><span><Eye className="inline w-4 h-4" /> {post.views} baxış</span><span><Clock className="inline w-4 h-4" /> {daysAgo(post.createdAt)} gün öncə</span></div><p className="text-slate-500 mt-4 line-clamp-2">{post.content}</p>{post.mediaUrl && (post.mediaUrl.match(/\.(mp4|webm)$/i) ? <video src={post.mediaUrl} controls className="mt-4 max-h-64 w-full rounded-xl" /> : <img src={post.mediaUrl} alt="" className="mt-4 max-h-64 w-full rounded-xl object-cover" />)}</article>)}
             </section>
             <aside className="lg:col-span-4 bg-white border border-slate-200 rounded-3xl p-5 sm:p-7 self-start lg:sticky lg:top-28"><h2 className="font-bold text-slate-900 mb-5">Son mövzular</h2>{posts.slice(0, 5).map((post) => <button key={post.id} onClick={() => openPost(post)} className="block text-left w-full py-3 border-b border-slate-100"><span className="font-semibold text-sm text-slate-700">{post.title}</span><span className="block text-xs text-slate-400 mt-1">{post.comments} rəy · {post.views} baxış</span></button>)}</aside>
           </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Eye, Filter, Heart, Loader2, MessageCircle, Search } from 'lucide-react';
+import { Check, ChevronDown, Eye, Heart, Loader2, MessageCircle, Search, SlidersHorizontal } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api.js';
 
@@ -9,6 +9,7 @@ export default function Layiheler() {
   const [projects, setProjects] = useState([]);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
+  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -28,7 +29,19 @@ export default function Layiheler() {
         <section className="xl:col-span-9 space-y-6">
           <header className="bg-white/80 border border-slate-200 rounded-3xl p-5 sm:p-8 shadow-sm">
             <div className="flex items-center justify-between gap-4 flex-wrap mb-5"><h1 className="text-2xl sm:text-3xl font-black text-slate-900">Layihələr <span className="text-blue-600">({projects.length})</span></h1><span className="text-sm text-slate-500">Canlı portfolio axtarışı</span></div>
-            <label className="flex items-center bg-white border border-slate-200 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/20"><Search className="ml-4 w-5 h-5 text-slate-400 shrink-0" /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Layihə və ya müəllif axtarışı..." className="w-full min-w-0 px-3 py-4 outline-none text-sm sm:text-base" /></label>
+            <div className="relative z-30 flex items-center bg-white border border-slate-200 rounded-2xl overflow-visible focus-within:ring-2 focus-within:ring-blue-500/20">
+              <Search className="ml-4 w-5 h-5 text-slate-400 shrink-0" />
+              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Layihə və ya müəllif axtarışı..." className="w-full min-w-0 px-3 py-4 outline-none text-sm sm:text-base" />
+              <div className="relative shrink-0 border-l border-slate-200">
+                <button type="button" onClick={() => setCategoryMenuOpen((open) => !open)} className="h-14 px-4 flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-blue-600 hover:bg-slate-50">
+                  <SlidersHorizontal className="w-4 h-4" /><span className="max-w-24 truncate">{category || 'Kateqoriya'}</span><ChevronDown className={`w-4 h-4 transition-transform ${categoryMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {categoryMenuOpen && <div className="absolute right-0 top-[calc(100%+10px)] w-64 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl">
+                  <p className="px-3 py-2 text-[11px] uppercase tracking-widest text-slate-400 font-black">Kateqoriya seç</p>
+                  {['', ...CATEGORIES].map((item) => <button key={item || 'all'} type="button" onClick={() => { setCategory(item); setCategoryMenuOpen(false); }} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left text-sm font-semibold ${category === item ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-50'}`}>{item || 'Bütün kateqoriyalar'}{category === item && <Check className="w-4 h-4" />}</button>)}
+                </div>}
+              </div>
+            </div>
           </header>
           {loading && <div className="py-16 flex justify-center text-blue-600"><Loader2 className="animate-spin" /></div>}
           {error && <div className="p-4 rounded-xl bg-red-50 text-red-700">{error}</div>}
