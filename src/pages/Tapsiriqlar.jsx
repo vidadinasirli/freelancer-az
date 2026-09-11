@@ -24,6 +24,9 @@ import {
   Github,
   Twitter,
   Mail,
+  SlidersHorizontal,
+  ChevronDown,
+  Check,
   Camera,
   Layout,
   Code,
@@ -80,6 +83,8 @@ export default function Tapsiriqlar() {
   const [taskSearch, setTaskSearch] = useState('');
   const [taskCategory, setTaskCategory] = useState('');
   const [freelancerSearch, setFreelancerSearch] = useState('');
+  const [freelancerCategory, setFreelancerCategory] = useState('');
+  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
   const [followedFreelancers, setFollowedFreelancers] = useState({});
 
   const [tasks, setTasks] = useState([]);
@@ -140,9 +145,12 @@ export default function Tapsiriqlar() {
 
   const visibleFreelancers = freelancers.filter((freelancer) => {
     const query = freelancerSearch.toLowerCase();
-    return !query || [freelancer.name, freelancer.title, ...(freelancer.skills || [])]
+    const matchesSearch = !query || [freelancer.name, freelancer.title, ...(freelancer.skills || [])]
       .some((value) => value.toLowerCase().includes(query));
+    const matchesCategory = !freelancerCategory || (freelancer.skills || []).includes(freelancerCategory);
+    return matchesSearch && matchesCategory;
   });
+  const freelancerCategories = [...new Set(freelancers.flatMap((freelancer) => freelancer.skills || []))].sort((a, b) => a.localeCompare(b, 'az'));
 
   // Navbar-dakı "Tapşırıqlar" / "Freelancerlər" linkləri fərqli route-lardır,
   // amma eyni komponentdən istifadə edir — path dəyişəndə görünüşü sinxronlaşdırırıq.
@@ -714,7 +722,7 @@ export default function Tapsiriqlar() {
                     </div>
                   </div>
                   
-                  <div className="flex w-full bg-white/90 backdrop-blur border border-slate-200/80 rounded-2xl overflow-hidden focus-within:ring-4 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all shadow-sm group">
+                  <div className="flex w-full bg-white/90 backdrop-blur border border-slate-200/80 rounded-2xl overflow-visible focus-within:ring-4 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all shadow-sm group relative z-20">
                     <div className="flex items-center pl-6 pr-3 text-slate-400 group-focus-within:text-blue-500 transition-colors">
                       <Search className="w-6 h-6" />
                     </div>
@@ -728,6 +736,56 @@ export default function Tapsiriqlar() {
                     <button className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white px-12 font-bold transition-all shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:shadow-[0_0_30px_rgba(37,99,235,0.6)]">
                       Axtar
                     </button>
+                    <div className="relative shrink-0 border-l border-slate-200/80">
+                      <button
+                        type="button"
+                        onClick={() => setCategoryMenuOpen((open) => !open)}
+                        className={`h-full min-w-[190px] px-5 flex items-center justify-center gap-2 font-bold text-sm transition-all ${
+                          freelancerCategory
+                            ? 'text-blue-600 bg-blue-50/80'
+                            : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
+                        }`}
+                        aria-expanded={categoryMenuOpen}
+                        aria-label="Kateqoriya filtri"
+                      >
+                        <SlidersHorizontal className="w-4 h-4" />
+                        <span className="max-w-[115px] truncate">{freelancerCategory || 'Kateqoriya'}</span>
+                        <ChevronDown className={`w-4 h-4 transition-transform ${categoryMenuOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      {categoryMenuOpen && (
+                        <div className="absolute right-0 top-[calc(100%+12px)] w-72 rounded-2xl border border-slate-200 bg-white/95 backdrop-blur-xl p-2 shadow-2xl shadow-blue-900/15 animate-in fade-in slide-in-from-top-2 duration-200">
+                          <div className="px-3 py-2 text-[11px] uppercase tracking-widest text-slate-400 font-black">
+                            Fəaliyyət sahəsi seç
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => { setFreelancerCategory(''); setCategoryMenuOpen(false); }}
+                            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left text-sm font-bold transition-colors ${
+                              !freelancerCategory ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-50'
+                            }`}
+                          >
+                            Bütün kateqoriyalar
+                            {!freelancerCategory && <Check className="w-4 h-4" />}
+                          </button>
+                          <div className="max-h-64 overflow-y-auto mt-1">
+                            {freelancerCategories.map((category) => (
+                              <button
+                                key={category}
+                                type="button"
+                                onClick={() => { setFreelancerCategory(category); setCategoryMenuOpen(false); }}
+                                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left text-sm font-semibold transition-colors ${
+                                  freelancerCategory === category ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-50 hover:text-blue-600'
+                                }`}
+                              >
+                                <span className="truncate">{category}</span>
+                                {freelancerCategory === category && <Check className="w-4 h-4 shrink-0" />}
+                              </button>
+                            ))}
+                            {!freelancerCategories.length && <p className="px-3 py-3 text-sm text-slate-400">Kateqoriyalar yüklənir...</p>}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
