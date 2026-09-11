@@ -1,5 +1,8 @@
 const BASE_URL = import.meta.env.VITE_API_URL || 'https://freelancer-az-2.onrender.com/api';
 const TOKEN_KEY = 'freelancer_az_token';
+const publicCache = new Map();
+const publicRequests = new Map();
+const PUBLIC_CACHE_TTL = 15000;
 
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY);
@@ -10,6 +13,12 @@ export function setToken(token) {
 }
 
 async function request(path, { method = 'GET', body, auth = true } = {}) {
+  const cacheKey = `${method}:${path}`;
+  if (method === 'GET' && !auth) {
+    const cached = publicCache.get(cacheKey);
+    if (cached && Date.now() - cached.time < PUBLIC_CACHE_TTL) return cached.data;
+    if (publicRequests.has(cacheKey)) return publicRequests.get(cacheKey);
+  }
   const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
   const headers = isFormData ? {} : { 'Content-Type': 'application/json' };
   if (auth) {
@@ -17,21 +26,34 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
     if (token) headers.Authorization = `Bearer ${token}`;
   }
   let res;
-  try {
+  const fetchRequest = (async () => {
+   try {
     res = await fetch(`${BASE_URL}${path}`, {
       method,
       headers,
       body: body !== undefined ? (isFormData ? body : JSON.stringify(body)) : undefined,
     });
-  } catch (err) {
+   } catch (err) {
     throw new Error('Serverə qoşulmaq mümkün olmadı. Backend işə salındığından əmin olun (npm run server).');
-  }
+   }
   const isJson = res.headers.get('content-type')?.includes('application/json');
   const data = isJson ? await res.json().catch(() => ({})) : null;
-  if (!res.ok) {
+   if (!res.ok) {
     throw new Error((data && data.error) || `Xəta baş verdi (${res.status})`);
+   }
+   return data;
+  })();
+  if (method === 'GET' && !auth) {
+    publicRequests.set(cacheKey, fetchRequest);
+    try {
+      const data = await fetchRequest;
+      publicCache.set(cacheKey, { data, time: Date.now() });
+      return data;
+    } finally {
+      publicRequests.delete(cacheKey);
+    }
   }
-  return data;
+  return fetchRequest;
 }
 
 export const api = {

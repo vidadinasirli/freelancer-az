@@ -6,17 +6,23 @@ const router = Router();
 
 async function enrichProfile(row) {
   const profile = toProfile(row);
-  profile.socialLinks = await db.get('SELECT github, instagram, linkedin, facebook, displayLink1, displayLink2 FROM social_links WHERE userId = ?', [row.id]) || {};
-  profile.specialties = await db.all('SELECT id, category, title, about, hourlyRate, experience FROM freelancer_specialties WHERE freelancerId = ? ORDER BY createdAt DESC', [row.id]);
-  profile.followers = (await db.get('SELECT COUNT(*) count FROM follows WHERE followingId = ?', [row.id])).count;
-  profile.onlineStatus = await db.get('SELECT isOnline, lastSeenAt FROM user_online_status WHERE userId = ?', [row.id]) || { isOnline: 0, lastSeenAt: '' };
-  profile.projects = await db.all('SELECT id, title, category, imageUrl AS image, description, likes, views, createdAt FROM projects WHERE ownerId = ? ORDER BY createdAt DESC', [row.id]);
-  profile.stats = {
-    completedOrders: (await db.get("SELECT COUNT(*) count FROM tasks t JOIN applications a ON a.taskId = t.id WHERE a.freelancerId = ? AND t.status = 'tamamlandı'", [row.id])).count,
-    activeOrders: (await db.get("SELECT COUNT(*) count FROM tasks t JOIN applications a ON a.taskId = t.id WHERE a.freelancerId = ? AND t.status = 'davam edir'", [row.id])).count,
-    conflictJobs: (await db.get("SELECT COUNT(*) count FROM tasks t JOIN applications a ON a.taskId = t.id WHERE a.freelancerId = ? AND t.status = 'arbitraj'", [row.id])).count,
-    projectViews: (await db.get('SELECT COALESCE(SUM(views), 0) total FROM projects WHERE ownerId = ?', [row.id])).total,
-  };
+  const [socialLinks, specialties, followers, onlineStatus, projects, completedOrders, activeOrders, conflictJobs, projectViews] = await Promise.all([
+    db.get('SELECT github, instagram, linkedin, facebook, displayLink1, displayLink2 FROM social_links WHERE userId = ?', [row.id]),
+    db.all('SELECT id, category, title, about, hourlyRate, experience FROM freelancer_specialties WHERE freelancerId = ? ORDER BY createdAt DESC', [row.id]),
+    db.get('SELECT COUNT(*) count FROM follows WHERE followingId = ?', [row.id]),
+    db.get('SELECT isOnline, lastSeenAt FROM user_online_status WHERE userId = ?', [row.id]),
+    db.all('SELECT id, title, category, imageUrl AS image, description, likes, views, createdAt FROM projects WHERE ownerId = ? ORDER BY createdAt DESC', [row.id]),
+    db.get("SELECT COUNT(*) count FROM tasks t JOIN applications a ON a.taskId = t.id WHERE a.freelancerId = ? AND t.status = 'tamamlandı'", [row.id]),
+    db.get("SELECT COUNT(*) count FROM tasks t JOIN applications a ON a.taskId = t.id WHERE a.freelancerId = ? AND t.status = 'davam edir'", [row.id]),
+    db.get("SELECT COUNT(*) count FROM tasks t JOIN applications a ON a.taskId = t.id WHERE a.freelancerId = ? AND t.status = 'arbitraj'", [row.id]),
+    db.get('SELECT COALESCE(SUM(views), 0) total FROM projects WHERE ownerId = ?', [row.id]),
+  ]);
+  profile.socialLinks = socialLinks || {};
+  profile.specialties = specialties;
+  profile.followers = followers?.count || 0;
+  profile.onlineStatus = onlineStatus || { isOnline: 0, lastSeenAt: '' };
+  profile.projects = projects;
+  profile.stats = { completedOrders: completedOrders?.count || 0, activeOrders: activeOrders?.count || 0, conflictJobs: conflictJobs?.count || 0, projectViews: projectViews?.total || 0 };
   return profile;
 }
 
