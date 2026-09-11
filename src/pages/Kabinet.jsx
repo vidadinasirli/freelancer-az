@@ -60,8 +60,10 @@ export default function Kabinet() {
   const handleSave = async (e) => {
     e.preventDefault();
     setSaveError('');
+    setSaveMessage('');
     try {
-      await saveProfile(localProfile);
+      const { id, email, role, createdAt, ...editableProfile } = localProfile;
+      await saveProfile(editableProfile);
       setSaveMessage('Məlumatlar uğurla yadda saxlanıldı.');
       setTimeout(() => setSaveMessage(''), 3000);
     } catch (err) {
@@ -92,6 +94,8 @@ export default function Kabinet() {
   const uploadProfileMedia = async (field, file) => {
     if (!file) return;
     setMediaUploading(field);
+    setSaveError('');
+    setSaveMessage('');
     try {
       const uploaded = await api.uploadMedia(file);
       const updated = await api.updateProfileMedia(field, uploaded.url);

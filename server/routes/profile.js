@@ -25,13 +25,17 @@ router.put('/', requireAuth, async (req, res, next) => {
     bannerUrl: body.bannerUrl ?? current.bannerUrl,
     isProfileVisible: body.isProfileVisible === undefined ? current.isProfileVisible : (body.isProfileVisible ? 1 : 0),
     status: body.status ?? current.status,
-    activityAreas: body.activityAreas ? JSON.stringify(body.activityAreas) : current.activityAreas,
+    activityAreas: body.activityAreas === undefined ? current.activityAreas : JSON.stringify(Array.isArray(body.activityAreas) ? body.activityAreas : []),
     experience: body.experience ?? current.experience,
     hourlyRate: body.hourlyRate ?? current.hourlyRate,
     rateType: body.rateType ?? current.rateType,
     nickname: body.nickname ?? current.nickname,
     phone: body.phone ?? current.phone,
-    privacySettings: body.privacySettings ? JSON.stringify(body.privacySettings) : current.privacySettings,
+    privacySettings: body.privacySettings === undefined ? current.privacySettings : JSON.stringify(
+      body.privacySettings && typeof body.privacySettings === 'object' && !Array.isArray(body.privacySettings)
+        ? body.privacySettings
+        : {},
+    ),
   };
 
   await db.run(`UPDATE users SET fullName=?, about=?, avatarUrl=?, bannerUrl=?, isProfileVisible=?,
