@@ -30,7 +30,29 @@ async function enrichProfile(row) {
 router.get('/freelancers', async (req, res, next) => {
  try {
   const rows = await db.all(`SELECT * FROM users WHERE role = 'freelancer' AND isProfileVisible = TRUE ORDER BY createdAt DESC`);
-  res.json(await Promise.all(rows.map(enrichProfile)));
+  const specialties = await db.all(
+    'SELECT freelancerId, category FROM freelancer_specialties ORDER BY createdAt DESC'
+  );
+  const categoriesByFreelancer = new Map();
+  specialties.forEach(({ freelancerId, category }) => {
+    if (!category) return;
+    const categories = categoriesByFreelancer.get(freelancerId) || [];
+    if (!categories.includes(category)) categories.push(category);
+    categoriesByFreelancer.set(freelancerId, categories);
+  });
+
+  // The list only needs card data. Load detailed projects, social links and
+  // order statistics lazily when a freelancer profile is opened.
+  res.json(rows.map((row) => {
+    const profile = toProfile(row);
+    profile.activityAreas = [
+      ...new Set([...(profile.activityAreas || []), ...(categoriesByFreelancer.get(row.id) || [])]),
+    ];
+    profile.specialties = [];
+    profile.projects = [];
+    profile.stats = { completedOrders: 0, activeOrders: 0, conflictJobs: 0, projectViews: 0 };
+    return profile;
+  }));
  } catch (error) { next(error); }
 });
 

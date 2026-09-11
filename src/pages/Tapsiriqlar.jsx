@@ -86,6 +86,7 @@ export default function Tapsiriqlar() {
   const [tasksLoading, setTasksLoading] = useState(true);
   const [tasksError, setTasksError] = useState("");
   const [freelancers, setFreelancers] = useState([]);
+  const [freelancersLoading, setFreelancersLoading] = useState(true);
   const [clubPosts, setClubPosts] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createForm, setCreateForm] = useState({ title: '', description: '', price: '', categories: [] });
@@ -106,6 +107,7 @@ export default function Tapsiriqlar() {
   }, [taskSearch, taskCategory]);
 
   const loadFreelancers = useCallback(async () => {
+    setFreelancersLoading(true);
     try {
       const data = await api.getFreelancers();
       setFreelancers(data.map((profile) => ({
@@ -126,6 +128,8 @@ export default function Tapsiriqlar() {
       })));
     } catch {
       setTasksError('Freelancer siyahısını yükləmək mümkün olmadı.');
+    } finally {
+      setFreelancersLoading(false);
     }
   }, []);
 
@@ -703,7 +707,9 @@ export default function Tapsiriqlar() {
                   
                   <div className="flex justify-between items-end mb-8">
                     <div>
-                      <h1 className="text-3xl font-black text-gradient tracking-tight mb-2">Frilanserlər ({freelancers.length})</h1>
+                      <h1 className="text-3xl font-black text-gradient tracking-tight mb-2">
+                        Frilanserlər ({freelancersLoading ? '...' : freelancers.length})
+                      </h1>
                       <p className="text-slate-500 font-medium text-lg">Layihəniz üçün ən yaxşı <span className="text-blue-600 font-bold">mütəxəssisləri</span> tapın</p>
                     </div>
                   </div>
@@ -727,7 +733,19 @@ export default function Tapsiriqlar() {
 
                 {/* Freelancers Mapping */}
                 <div className="space-y-6">
-                  {visibleFreelancers.map((freelancer) => (
+                  {freelancersLoading && [1, 2, 3].map((item) => (
+                    <div key={item} className="bg-white/80 rounded-3xl p-8 border border-blue-100/60 animate-pulse">
+                      <div className="flex items-center gap-5">
+                        <div className="w-20 h-20 rounded-[1.5rem] bg-slate-200" />
+                        <div className="space-y-3 flex-1">
+                          <div className="h-6 bg-slate-200 rounded-lg w-1/3" />
+                          <div className="h-4 bg-slate-100 rounded-lg w-1/2" />
+                          <div className="h-4 bg-slate-100 rounded-lg w-3/4" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {!freelancersLoading && visibleFreelancers.map((freelancer) => (
                     <div 
                       key={freelancer.id} 
                       onClick={() => handleFreelancerClick(freelancer)}
@@ -790,6 +808,11 @@ export default function Tapsiriqlar() {
                             {skill}
                           </span>
                         ))}
+                        {!freelancersLoading && !visibleFreelancers.length && (
+                          <div className="rounded-3xl border border-slate-200 bg-white/80 p-10 text-center text-slate-500 font-medium">
+                            Axtarışınıza uyğun freelancer tapılmadı.
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
