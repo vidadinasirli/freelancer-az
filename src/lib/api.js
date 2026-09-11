@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const BASE_URL = import.meta.env.VITE_API_URL || 'https://freelancer-az-2.onrender.com/api';
 const TOKEN_KEY = 'freelancer_az_token';
 
 export function getToken() {
