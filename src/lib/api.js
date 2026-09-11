@@ -41,6 +41,7 @@ export const api = {
 
   getProfile: () => request('/profile'),
   updateProfile: (payload) => request('/profile', { method: 'PUT', body: payload }),
+  updateProfileMedia: (field, url) => request('/profile/media', { method: 'PATCH', body: { field, url } }),
   getSpecialties: () => request('/profile/specialties'),
   addSpecialty: (payload) => request('/profile/specialties', { method: 'POST', body: payload }),
   deleteSpecialty: (id) => request(`/profile/specialties/${id}`, { method: 'DELETE' }),

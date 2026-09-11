@@ -45,6 +45,20 @@ router.put('/', requireAuth, async (req, res, next) => {
  } catch (error) { next(error); }
 });
 
+router.patch('/media', requireAuth, async (req, res, next) => {
+ try {
+  const { field, url } = req.body || {};
+  if (!['avatarUrl', 'bannerUrl'].includes(field) || typeof url !== 'string' || !url.trim()) {
+    return res.status(400).json({ error: 'Şəkil sahəsi və URL tələb olunur.' });
+  }
+  const column = field === 'avatarUrl' ? 'avatarUrl' : 'bannerUrl';
+  await db.run(`UPDATE users SET ${column} = ? WHERE id = ?`, [url.trim(), req.userId]);
+  const row = await db.get('SELECT * FROM users WHERE id = ?', [req.userId]);
+  if (!row) return res.status(404).json({ error: 'İstifadəçi tapılmadı.' });
+  res.json(toProfile(row));
+ } catch (error) { next(error); }
+});
+
 router.get('/specialties', requireAuth, async (req, res, next) => {
  try {
   res.json(await db.all('SELECT * FROM freelancer_specialties WHERE freelancerId = ? ORDER BY createdAt DESC', [req.userId]));
