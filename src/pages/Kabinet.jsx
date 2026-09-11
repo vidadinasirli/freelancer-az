@@ -98,10 +98,11 @@ export default function Kabinet() {
     setSaveMessage('');
     try {
       const uploaded = await api.uploadMedia(file);
-      const updated = await api.updateProfileMedia(field, uploaded.url);
-      setLocalProfile((current) => ({ ...current, [field]: updated[field] }));
+      setLocalProfile((current) => ({ ...current, [field]: uploaded.url }));
       setSaveError('');
-      setSaveMessage(field === 'avatarUrl' ? 'Profil şəkli əlavə edildi.' : 'Banner şəkli əlavə edildi.');
+      setSaveMessage(field === 'avatarUrl'
+        ? 'Profil şəkli seçildi. Yadda saxlamaq üçün “Yadda saxla” düyməsinə basın.'
+        : 'Banner şəkli seçildi. Yadda saxlamaq üçün “Yadda saxla” düyməsinə basın.');
     } catch (error) {
       setSaveError(error.message);
     } finally {
