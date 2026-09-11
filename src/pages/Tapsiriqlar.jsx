@@ -119,7 +119,7 @@ export default function Tapsiriqlar() {
         priceText: profile.rateType || '-dən başlayır',
         reviews: { pos: '+0', neg: '-0' },
         description: profile.about || 'Profil məlumatı əlavə edilməyib.',
-        skills: profile.activityAreas || [],
+        skills: [...new Set([...(profile.activityAreas || []), ...(profile.specialties || []).map((item) => item.category).filter(Boolean)])],
         stats: { ...(profile.stats || {}), views: profile.stats?.projectViews || 0, customerReviews: { pos: '+0', neg: '-0' }, registration: profile.createdAt || '', lastActive: profile.status || 'Aktiv' },
         coverImage: profile.bannerUrl || 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=1200',
         portfolio: profile.projects || [],
@@ -164,6 +164,8 @@ export default function Tapsiriqlar() {
   const handleTaskClick = (task) => openTaskDetail(task);
 
   const handleFreelancerClick = async (freelancer) => {
+    setSelectedFreelancer(freelancer);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     try {
       const profile = await api.getUser(freelancer.id);
       setSelectedFreelancer({
@@ -175,15 +177,14 @@ export default function Tapsiriqlar() {
         price: profile.hourlyRate || 0,
         priceText: profile.rateType || '-dən başlayır',
         description: profile.about || 'Profil məlumatı əlavə edilməyib.',
-        skills: profile.activityAreas || [],
+        skills: [...new Set([...(profile.activityAreas || []), ...(profile.specialties || []).map((item) => item.category).filter(Boolean)])],
         coverImage: profile.bannerUrl || freelancer.coverImage,
         portfolio: profile.projects || [],
         stats: { ...(profile.stats || {}), views: profile.stats?.projectViews || 0, customerReviews: { pos: '+0', neg: '-0' }, registration: profile.createdAt || '', lastActive: profile.status || 'Aktiv' },
       });
     } catch {
-      setSelectedFreelancer(freelancer);
+      // The list card already contains a complete usable profile snapshot.
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBackToTasks = () => { setSelectedTask(null); setSelectedOwner(null); };
