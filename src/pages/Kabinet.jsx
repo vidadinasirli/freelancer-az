@@ -314,6 +314,35 @@ export default function Kabinet() {
                     </select>
                   </Field>
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Field label="Əsas saatlıq qiymət (AZN)" required>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={localProfile.hourlyRate ?? ''}
+                          onChange={(e) => setLocalProfile({ ...localProfile, hourlyRate: e.target.value })}
+                          className="w-full px-4 py-3 pr-16 bg-slate-100 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all outline-none text-slate-700"
+                          placeholder="Məsələn: 25"
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">AZN</span>
+                      </div>
+                    </Field>
+                    <Field label="Qiymət formatı">
+                      <select
+                        value={localProfile.rateType || '1 saat üçün'}
+                        onChange={(e) => setLocalProfile({ ...localProfile, rateType: e.target.value })}
+                        className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all outline-none text-slate-700 font-medium"
+                      >
+                        <option value="1 saat üçün">1 saat üçün</option>
+                        <option value="saatlıq">Saatlıq</option>
+                        <option value="gündən başlayır">Gündən başlayır</option>
+                        <option value="razılaşma ilə">Razılaşma ilə</option>
+                      </select>
+                    </Field>
+                  </div>
+
                   <div className="pt-6 border-t border-slate-100">
                     <h3 className="font-bold text-slate-800 mb-3">Məxfilik seçimləri</h3>
                     <label className="flex items-center gap-3 text-sm text-slate-600"><input type="checkbox" checked={localProfile.privacySettings?.acceptMessages !== false} onChange={(e) => setLocalProfile({ ...localProfile, privacySettings: { ...localProfile.privacySettings, acceptMessages: e.target.checked } })} /> Hamıdan mesaj qəbul et</label>
