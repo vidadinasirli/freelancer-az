@@ -61,8 +61,10 @@ function saveLocally(file, userId, req) {
   const extension = allowedTypes.get(file.mimetype);
   const filename = `${userId}-${Date.now()}-${crypto.randomUUID()}${extension}`;
   fs.writeFileSync(path.join(uploadDirectory, filename), file.buffer);
+  const forwardedProto = req.get('x-forwarded-proto')?.split(',')[0]?.trim();
+  const protocol = forwardedProto || (req.secure ? 'https' : req.protocol);
   return {
-    url: `${req.protocol}://${req.get('host')}/uploads/${filename}`,
+    url: `${protocol}://${req.get('host')}/uploads/${filename}`,
     filename,
     mimeType: file.mimetype,
     size: file.size,

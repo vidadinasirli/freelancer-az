@@ -94,9 +94,11 @@ export default function Kabinet() {
     setMediaUploading(field);
     try {
       const uploaded = await api.uploadMedia(file);
-      setLocalProfile((current) => ({ ...current, [field]: uploaded.url }));
+      const nextProfile = { ...localProfile, [field]: uploaded.url };
+      await saveProfile(nextProfile);
+      setLocalProfile(nextProfile);
       setSaveError('');
-      setSaveMessage(field === 'avatarUrl' ? 'Profil şəkli əlavə edildi.' : 'Banner şəkli əlavə edildi. Yadda saxlamağı unutmayın.');
+      setSaveMessage(field === 'avatarUrl' ? 'Profil şəkli əlavə edildi.' : 'Banner şəkli əlavə edildi.');
     } catch (error) {
       setSaveError(error.message);
     } finally {
