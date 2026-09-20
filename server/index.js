@@ -29,10 +29,13 @@ app.use('/uploads', express.static(path.join(__dirname, 'data', 'uploads'), {
 
 app.get('/api/health', async (req, res) => {
   try {
-    await dbReady;
+    await Promise.race([
+      dbReady,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Database readiness timeout')), 15000)),
+    ]);
     res.json({ ok: true, database: { ready: true, provider: db.isPostgres ? 'postgres' : 'sqlite' } });
   } catch (error) {
-    res.status(503).json({ ok: false, database: { ready: false } });
+    res.status(503).json({ ok: false, database: { ready: false }, error: 'Database hazır deyil.' });
   }
 });
 
@@ -53,7 +56,10 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Server xətası baş verdi.' });
 });
 
-await dbReady;
 app.listen(PORT, () => {
-  console.log(`Freelancer.az backend http://localhost:${PORT} ünvanında işləyir (${db.isPostgres ? 'PostgreSQL' : 'SQLite'} database)`);
+  console.log(`Freelancer.az backend http://localhost:${PORT} ünvanında işləyir (${db.isPostgres ? 'PostgreSQL' : 'SQLite'} database gözlənilir)`);
 });
+
+dbReady
+  .then(() => console.log(`Database hazırdır (${db.isPostgres ? 'PostgreSQL' : 'SQLite'}).`))
+  .catch((error) => console.error('Database başlatma xətası:', error));
