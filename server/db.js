@@ -9,7 +9,19 @@ const rawDatabaseUrl = process.env.DATABASE_URL?.trim() || '';
 // Accept an accidentally pasted dotenv assignment while keeping the actual
 // connection value isolated from other environment variables.
 const databaseUrl = rawDatabaseUrl.replace(/^DATABASE_URL\s*=\s*/i, '');
-const usePostgres = Boolean(databaseUrl);
+let usePostgres = false;
+if (databaseUrl) {
+  try {
+    const parsedDatabaseUrl = new URL(databaseUrl);
+    usePostgres = ['postgres:', 'postgresql:'].includes(parsedDatabaseUrl.protocol)
+      && !/example|your[-_ ]|placeholder/i.test(databaseUrl);
+  } catch {
+    console.warn('Invalid DATABASE_URL detected; using local SQLite database.');
+  }
+}
+if (rawDatabaseUrl && !usePostgres && !/example|your[-_ ]|placeholder/i.test(databaseUrl)) {
+  console.warn('DATABASE_URL must be a valid PostgreSQL URL; using local SQLite database.');
+}
 let client;
 let sqlite = false;
 let initializing = true;
