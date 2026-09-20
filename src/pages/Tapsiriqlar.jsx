@@ -82,6 +82,7 @@ export default function Tapsiriqlar() {
   const [applyMessage, setApplyMessage] = useState("");
   const [taskSearch, setTaskSearch] = useState('');
   const [taskCategory, setTaskCategory] = useState('');
+  const [taskCategoryMenuOpen, setTaskCategoryMenuOpen] = useState(false);
   const [freelancerSearch, setFreelancerSearch] = useState('');
   const [freelancerCategory, setFreelancerCategory] = useState('');
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
@@ -283,7 +284,7 @@ export default function Tapsiriqlar() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] font-sans text-slate-800 selection:bg-blue-200 selection:text-blue-900 flex flex-col relative overflow-hidden pt-24">
+    <div className="min-h-screen bg-[#F8FAFC] font-sans text-slate-800 selection:bg-blue-200 selection:text-blue-900 flex flex-col relative overflow-visible pt-24">
       
       {/* Global Ambient Background Effects - Premium Look */}
       <div className="fixed top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-blue-400/10 blur-[150px] pointer-events-none z-0"></div>
@@ -347,7 +348,7 @@ export default function Tapsiriqlar() {
           !selectedTask ? (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 animate-in fade-in duration-500">
               <div className="lg:col-span-8 space-y-6">
-                <div className="glass-panel rounded-3xl p-8 shadow-[0_15px_40px_-15px_rgba(0,0,0,0.05)]">
+                <div className="glass-panel rounded-3xl p-8 shadow-[0_15px_40px_-15px_rgba(0,0,0,0.05)] relative z-30 overflow-visible">
                   <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
                     <h1 className="text-3xl font-black text-slate-900">İş Elanları</h1>
                     {user?.role === 'musteri' && (
@@ -360,12 +361,24 @@ export default function Tapsiriqlar() {
                     )}
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                  <div className="flex flex-col sm:flex-row gap-3 mb-6 relative z-50">
                     <input value={taskSearch} onChange={(e) => setTaskSearch(e.target.value)} placeholder="Tapşırıq axtarışı..." className="w-full min-w-0 px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20" />
-                    <select value={taskCategory} onChange={(e) => setTaskCategory(e.target.value)} className="w-full sm:w-56 px-4 py-3 border border-slate-200 rounded-xl outline-none bg-white font-semibold text-slate-600 focus:ring-2 focus:ring-blue-500/20">
-                      <option value="">Bütün kateqoriyalar</option>
-                      {TASK_CATEGORY_OPTIONS.map((category) => <option key={category} value={category}>{category}</option>)}
-                    </select>
+                    <div className="relative w-full sm:w-64 shrink-0">
+                      <button type="button" onClick={() => setTaskCategoryMenuOpen((open) => !open)} className={`w-full h-full min-h-12 px-4 rounded-xl border border-slate-200 bg-white flex items-center justify-between gap-2 text-sm font-bold ${taskCategory ? 'text-blue-600' : 'text-slate-600'}`}>
+                        <span className="truncate">{taskCategory || 'Bütün kateqoriyalar'}</span>
+                        <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${taskCategoryMenuOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      {taskCategoryMenuOpen && (
+                        <div className="absolute right-0 top-[calc(100%+8px)] z-[100] w-full min-w-64 max-h-72 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl">
+                          {['', ...TASK_CATEGORY_OPTIONS].map((item) => (
+                            <button key={item || 'all'} type="button" onClick={() => { setTaskCategory(item); setTaskCategoryMenuOpen(false); }} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left text-sm font-semibold ${taskCategory === item ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-50'}`}>
+                              <span>{item || 'Bütün kateqoriyalar'}</span>
+                              {taskCategory === item && <Check className="w-4 h-4" />}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {tasksLoading && (
@@ -710,7 +723,7 @@ export default function Tapsiriqlar() {
               <div className="lg:col-span-8 space-y-8">
                 
                 {/* Header & Search */}
-                <div className="glass-panel rounded-3xl p-8 shadow-[0_15px_40px_-15px_rgba(0,0,0,0.05)] relative overflow-hidden">
+                <div className="glass-panel rounded-3xl p-8 shadow-[0_15px_40px_-15px_rgba(0,0,0,0.05)] relative z-30 overflow-visible">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-100/40 rounded-full blur-[80px] -z-10 translate-x-1/2 -translate-y-1/2"></div>
                   
                   <div className="flex justify-between items-end mb-8">
@@ -753,7 +766,7 @@ export default function Tapsiriqlar() {
                         <ChevronDown className={`w-4 h-4 transition-transform ${categoryMenuOpen ? 'rotate-180' : ''}`} />
                       </button>
                       {categoryMenuOpen && (
-                        <div className="absolute right-0 top-[calc(100%+12px)] w-72 rounded-2xl border border-slate-200 bg-white/95 backdrop-blur-xl p-2 shadow-2xl shadow-blue-900/15 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="absolute right-0 top-[calc(100%+12px)] z-[100] w-72 rounded-2xl border border-slate-200 bg-white/95 backdrop-blur-xl p-2 shadow-2xl shadow-blue-900/15 animate-in fade-in slide-in-from-top-2 duration-200">
                           <div className="px-3 py-2 text-[11px] uppercase tracking-widest text-slate-400 font-black">
                             Fəaliyyət sahəsi seç
                           </div>

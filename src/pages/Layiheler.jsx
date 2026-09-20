@@ -36,7 +36,7 @@ export default function Layiheler() {
                 <button type="button" onClick={() => setCategoryMenuOpen((open) => !open)} className="h-14 px-4 flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-blue-600 hover:bg-slate-50">
                   <SlidersHorizontal className="w-4 h-4" /><span className="max-w-24 truncate">{category || 'Kateqoriya'}</span><ChevronDown className={`w-4 h-4 transition-transform ${categoryMenuOpen ? 'rotate-180' : ''}`} />
                 </button>
-                {categoryMenuOpen && <div className="absolute right-0 top-[calc(100%+10px)] w-64 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl">
+                {categoryMenuOpen && <div className="absolute right-0 top-[calc(100%+10px)] z-[100] w-64 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl">
                   <p className="px-3 py-2 text-[11px] uppercase tracking-widest text-slate-400 font-black">Kateqoriya seç</p>
                   {['', ...CATEGORIES].map((item) => <button key={item || 'all'} type="button" onClick={() => { setCategory(item); setCategoryMenuOpen(false); }} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left text-sm font-semibold ${category === item ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-50'}`}>{item || 'Bütün kateqoriyalar'}{category === item && <Check className="w-4 h-4" />}</button>)}
                 </div>}
